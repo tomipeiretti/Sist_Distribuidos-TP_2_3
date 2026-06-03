@@ -1,0 +1,40 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar codigo
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Levantar servicios con Docker Compose
+        run: docker compose up --build -d
+
+      - name: Esperar servicios
+        run: |
+          sleep 20
+          docker ps
+
+      - name: Instalar dependencias de test
+        run: pip install -r requirements-test.txt
+
+      - name: Ejecutar tests
+        run: pytest -v
+
+      - name: Mostrar logs si falla
+        if: failure()
+        run: docker compose logs
+
+      - name: Apagar servicios
+        if: always()
+        run: docker compose down
