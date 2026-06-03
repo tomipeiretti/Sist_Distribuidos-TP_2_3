@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package catalogo;
+
+// Copia del contrato. En produccion seria un paquete versionado y compartido.
+// Si cambia el .proto en catalogo/, hay que sincronizar esta copia.
+
+message StockRequest {
+  string sku = 1;
+}
+
+message StockResponse {
+  string sku = 1;
+  int32 stock = 2;
+  double precio = 3;
+  bool disponible = 4;
+}
+
+service Catalogo {
+  rpc ConsultarStock(StockRequest) returns (StockResponse);
+}

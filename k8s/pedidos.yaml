@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pedidos-config
+data:
+  CATALOGO_ADDR: "catalogo:50051"
+  RABBIT_URL: "amqp://guest:guest@rabbitmq:5672/"
+  GRPC_TIMEOUT: "0.3"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pedidos
+  labels: { app: pedidos }
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: pedidos }
+  template:
+    metadata:
+      labels: { app: pedidos }
+    spec:
+      containers:
+        - name: pedidos
+          image: mpi/pedidos:v1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - { containerPort: 8000 }
+          envFrom:
+            - configMapRef: { name: pedidos-config }
+          resources:
+            requests: { memory: "128Mi", cpu: "100m" }
+            limits:   { memory: "256Mi", cpu: "500m" }
+          # Liveness: solo el proceso. Si /health falla, el pod esta zombie -> reiniciarlo.
+          livenessProbe:
+            httpGet: { path: /health, port: 8000 }
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            failureThreshold: 3
+          # Readiness: dependencias criticas (catalogo, rabbit).
+          # Si fallan, K8s saca el pod del Service pero NO lo mata.
+          readinessProbe:
+            httpGet: { path: /ready, port: 8000 }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pedidos
+spec:
+  type: ClusterIP
+  selector: { app: pedidos }
+  ports:
+    - { port: 8000, targetPort: 8000 }

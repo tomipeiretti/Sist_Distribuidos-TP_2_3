@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package catalogo;
+
+// Los numeros de campo (= 1, = 2, ...) son INMUTABLES.
+// Son el orden binario del mensaje sobre el cable.
+// Reglas:
+//   - Solo se pueden AGREGAR campos con numeros nuevos no usados antes.
+//   - NUNCA cambiar el numero ni el tipo de un campo existente.
+//   - Si se borra un campo, usar 'reserved N;' para bloquear su numero.
+
+message StockRequest {
+  string sku = 1;
+}
+
+message StockResponse {
+  string sku = 1;
+  int32 stock = 2;
+  double precio = 3;
+  bool disponible = 4;
+}
+
+service Catalogo {
+  rpc ConsultarStock(StockRequest) returns (StockResponse);
+}
