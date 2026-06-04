@@ -149,7 +149,6 @@ def reservar(req: ReserveRequest):
             stock_actual = get_stock(req.sku)
 
             if stock_actual < req.cantidad:
-                overselling_attempts_total.inc()
                 reserve_attempts_total.labels(result="sin_stock").inc()
 
                 raise HTTPException(

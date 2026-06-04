@@ -67,3 +67,22 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
+
+
+  prometheus:
+    image: prom/prometheus:v2.55.0
+    container_name: mpi-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - inventario
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    container_name: mpi-grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
